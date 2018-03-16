@@ -196,7 +196,7 @@ def onecall(method, url, results, **options):
 
 
 def run(
-    url, num=1, duration=None, method='GET', data=None, ct='text/plain',
+    url, num=1, duration=None, method='GET', data=None, ct='text/plain', engine=None,
         auth=None, concurrency=1, headers=None, pre_hook=None, post_hook=None,
         quiet=False):
 
@@ -210,7 +210,7 @@ def run(
         callable = data[len('py:'):]
         data = resolve_name(callable)
 
-    method = getattr(requests, method.lower())
+    method = getattr(engine, method.lower())
     options = {'headers': headers}
 
     if pre_hook is not None:
@@ -281,7 +281,7 @@ def resolve(url):
 
 
 def load(url, requests, concurrency, duration, method, data, ct, auth,
-         headers=None, pre_hook=None, post_hook=None, quiet=False):
+         headers=None, pre_hook=None, post_hook=None, quiet=False, engine=requests):
     if not quiet:
         print_server_info(url, method, headers=headers)
 
@@ -296,7 +296,7 @@ def load(url, requests, concurrency, duration, method, data, ct, auth,
     try:
         return run(url, requests, duration, method,
                    data, ct, auth, concurrency, headers,
-                   pre_hook, post_hook, quiet=quiet)
+                   pre_hook, post_hook, engine=engine, quiet=quiet)
     finally:
         if not quiet:
             print(' Done')
