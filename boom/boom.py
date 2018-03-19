@@ -196,9 +196,9 @@ def onecall(method, url, results, **options):
 
 
 def run(
-    url, num=1, duration=None, method='GET', data=None, ct='text/plain', engine=None,
+    url, num=1, duration=None, method='GET', data=None, ct='text/plain',
         auth=None, concurrency=1, headers=None, pre_hook=None, post_hook=None,
-        quiet=False):
+        quiet=False, cookies=None):
 
     if headers is None:
         headers = {}
@@ -206,11 +206,11 @@ def run(
     if 'content-type' not in headers:
         headers['Content-Type'] = ct
 
-    if data is not None and data.startswith('py:'):
+    if data is not None and isinstance(data, str) and data.startswith('py:'):
         callable = data[len('py:'):]
         data = resolve_name(callable)
 
-    method = getattr(engine, method.lower())
+    method = getattr(requests, method.lower())
     options = {'headers': headers}
 
     if pre_hook is not None:
@@ -224,6 +224,9 @@ def run(
 
     if auth is not None:
         options['auth'] = tuple(auth.split(':', 1))
+
+    if cookies is not None:
+        options['cookies'] = cookies
 
     pool = Pool(concurrency)
     start = time.time()
@@ -281,7 +284,7 @@ def resolve(url):
 
 
 def load(url, requests, concurrency, duration, method, data, ct, auth,
-         headers=None, pre_hook=None, post_hook=None, quiet=False, engine=requests):
+         headers=None, pre_hook=None, post_hook=None, quiet=False, cookies=None):
     if not quiet:
         print_server_info(url, method, headers=headers)
 
@@ -296,7 +299,7 @@ def load(url, requests, concurrency, duration, method, data, ct, auth,
     try:
         return run(url, requests, duration, method,
                    data, ct, auth, concurrency, headers,
-                   pre_hook, post_hook, engine=engine, quiet=quiet)
+                   pre_hook, post_hook, quiet=quiet, cookies=cookies)
     finally:
         if not quiet:
             print(' Done')
