@@ -198,7 +198,7 @@ def onecall(method, url, results, **options):
 def run(
     url, num=1, duration=None, method='GET', data=None, ct='text/plain',
         auth=None, concurrency=1, headers=None, pre_hook=None, post_hook=None,
-        quiet=False, cookies=None):
+        quiet=False, cookies=None, engine=None):
 
     if headers is None:
         headers = {}
@@ -210,7 +210,10 @@ def run(
         callable = data[len('py:'):]
         data = resolve_name(callable)
 
-    method = getattr(requests, method.lower())
+    if not engine:
+        engine = requests
+
+    method = getattr(engine, method.lower())
     options = {'headers': headers}
 
     if pre_hook is not None:
@@ -284,7 +287,7 @@ def resolve(url):
 
 
 def load(url, requests, concurrency, duration, method, data, ct, auth,
-         headers=None, pre_hook=None, post_hook=None, quiet=False, cookies=None):
+         headers=None, pre_hook=None, post_hook=None, quiet=False, cookies=None, engine=None):
     if not quiet:
         print_server_info(url, method, headers=headers)
 
@@ -299,7 +302,8 @@ def load(url, requests, concurrency, duration, method, data, ct, auth,
     try:
         return run(url, requests, duration, method,
                    data, ct, auth, concurrency, headers,
-                   pre_hook, post_hook, quiet=quiet, cookies=cookies)
+                   pre_hook, post_hook, quiet=quiet, cookies=cookies,
+                   engine=engine)
     finally:
         if not quiet:
             print(' Done')
@@ -418,7 +422,8 @@ def main():
             url, args.requests, args.concurrency, args.duration,
             args.method, args.data, args.content_type, args.auth,
             headers=headers, pre_hook=args.pre_hook,
-            post_hook=args.post_hook, quiet=(args.json_output or args.quiet))
+            post_hook=args.post_hook, quiet=(args.json_output or args.quiet),
+            engine=None)
     except RequestException as e:
         print_errors((e, ))
         sys.exit(1)
